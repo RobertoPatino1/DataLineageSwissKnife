@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Gestión 
+y Linaje de Tablas</title>
+    <script src="https://unpkg.com/cytoscape@3.26.0/dist/cytoscape.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <h1><div class="logo-icon">📊</div>Sistema de Gestión 
+y Linaje de Tablas</h1>
+            <div class="nav-buttons">
+                <button class="nav-btn active" onclick="switchModule('lineage')">
+                    <i class="fas fa-project-diagram"></i> Linaje
+                </button>
+                <button class="nav-btn" onclick="switchModule('impact')">
+                    <i class="fas fa-exclamation-triangle"></i> Impacto
+                </button>
+                <button class="theme-toggle" onclick="toggleTheme()" title="Cambiar tema">
+                    <i class="fas fa-sun"></i>
+                    <i class="fas fa-moon"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <!-- Módulo Linaje de Tablas -->
+        <section id="lineage-module" class="module active">
+            <div class="module-header">
+                <h2><i class="fas fa-project-diagram"></i> Análisis de Linaje de Tablas</h2>
+                <p>Visualiza las dependencias y relaciones entre tablas de tu base de datos</p>
+            </div>
+
+            <div class="control-panel">
+                <div class="table-selector">
+                    <label for="lineage-table">Seleccionar Tabla:</label>
+                    <div class="custom-select">
+                        <select id="lineage-table">
+                            <option value="">-- Selecciona una tabla --</option>
+                            <option value="customers">customers</option>
+                            <option value="orders">orders</option>
+                            <option value="products">products</option>
+                            <option value="order_details">order_details</option>
+                            <option value="inventory">inventory</option>
+                            <option value="suppliers">suppliers</option>
+                            <option value="categories">categories</option>
+                        </select>
+                    </div>
+                </div>
+                <button id="analyze-lineage" class="btn-primary">
+                    <i class="fas fa-search"></i>
+                    <span>Analizar Dependencias</span>
+                </button>
+            </div>
+
+            <div id="lineage-result" class="hidden">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-value" id="total-dependencies">0</div>
+                        <div class="stat-label">Dependencias Totales</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="upstream-tables">0</div>
+                        <div class="stat-label">Tablas Origen</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="downstream-tables">0</div>
+                        <div class="stat-label">Tablas Destino</div>
+                    </div>
+                </div>
+                
+                <div class="graph-container">
+                    <h3><i class="fas fa-sitemap"></i> Grafo de Dependencias</h3>
+                    <div id="lineage-graph" class="graph-canvas"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Módulo Análisis de Impacto -->
+        <section id="impact-module" class="module">
+            <div class="module-header">
+                <h2><i class="fas fa-exclamation-triangle"></i> Análisis de Impacto</h2>
+                <p>Evalúa el impacto de cambios en tablas sobre los stored procedures</p>
+            </div>
+
+            <div class="control-panel">
+                <div class="table-selector">
+                    <label for="impact-table">Seleccionar Tabla:</label>
+                    <div class="custom-select">
+                        <select id="impact-table">
+                            <option value="">-- Selecciona una tabla --</option>
+                            <option value="customers">customers</option>
+                            <option value="orders">orders</option>
+                            <option value="products">products</option>
+                            <option value="order_details">order_details</option>
+                            <option value="inventory">inventory</option>
+                            <option value="suppliers">suppliers</option>
+                            <option value="categories">categories</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="action-selector">
+                    <label for="impact-action">Acción a Evaluar:</label>
+                    <div class="custom-select">
+                        <select id="impact-action">
+                            <option value="">-- Selecciona una acción --</option>
+                            <option value="add-column">Agregar Columna</option>
+                            <option value="remove-column">Eliminar Columna</option>
+                            <option value="change-datatype">Cambiar Tipo de Dato</option>
+                            <option value="truncate-table">Truncar Tabla</option>
+                            <option value="drop-table">Eliminar Tabla</option>
+                        </select>
+                    </div>
+                </div>
+
+                <button id="analyze-impact" class="btn-primary">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Analizar Impacto</span>
+                </button>
+            </div>
+
+            <div id="impact-result" class="hidden">
+                <div class="impact-overview">
+                    <div class="gauge-container">
+                        <div class="gauge-circle">
+                            <div class="gauge-text">
+                                <span class="gauge-percentage">0%</span>
+                                <span class="gauge-label">Impacto Total</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="impact-stats">
+                        <div class="impact-stat critical">
+                            <div class="impact-number" id="critical-sps">0</div>
+                            <div class="impact-label">SPs Críticos</div>
+                        </div>
+                        <div class="impact-stat warning">
+                            <div class="impact-number" id="warning-sps">0</div>
+                            <div class="impact-label">SPs con Advertencias</div>
+                        </div>
+                        <div class="impact-stat safe">
+                            <div class="impact-number" id="safe-sps">0</div>
+                            <div class="impact-label">SPs Sin Impacto</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="sp-list-container">
+                    <h3><i class="fas fa-cogs"></i> Stored Procedures Afectados</h3>
+                    <div id="affected-sps" class="sp-list"></div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Tooltip para información de tablas -->
+    <div id="table-info" class="table-info"></div>
+
+    <script src="script.js"></script>
+</body>
+</html>
